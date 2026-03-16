@@ -8,7 +8,7 @@ import folium
 from streamlit_folium import st_folium
 
 
-st.set_page_config(page_title="Web GIS Join App", layout="wide")
+st.set_page_config(page_title="Web GIS Join App Ucas 2026 120237490", layout="wide")
 
 
 # تهيئة session state
