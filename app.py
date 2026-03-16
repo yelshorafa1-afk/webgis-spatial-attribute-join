@@ -11,9 +11,7 @@ from streamlit_folium import st_folium
 st.set_page_config(page_title="Web GIS Join App", layout="wide")
 
 
-# -----------------------------
 # تهيئة session state
-# -----------------------------
 if "result_gdf" not in st.session_state:
     st.session_state.result_gdf = None
 
@@ -24,9 +22,8 @@ if "result_type" not in st.session_state:
     st.session_state.result_type = ""
 
 
-# -----------------------------
+
 # قراءة الطبقة المرفوعة
-# -----------------------------
 def read_layer(uploaded_file, layer_label):
     file_name = uploaded_file.name.lower()
 
@@ -90,18 +87,17 @@ def read_layer(uploaded_file, layer_label):
         raise ValueError(f"حدث خطأ أثناء قراءة الملف {layer_label}: {str(e)}")
 
 
-# -----------------------------
 # توحيد نظام الإحداثيات
-# -----------------------------
+
 def align_crs(left_gdf, right_gdf):
     if left_gdf.crs != right_gdf.crs:
         right_gdf = right_gdf.to_crs(left_gdf.crs)
     return left_gdf, right_gdf
 
 
-# -----------------------------
+
 # رسم الخريطة
-# -----------------------------
+
 def make_map(gdf, color="blue"):
     gdf_map = gdf.to_crs(epsg=4326)
 
@@ -123,9 +119,7 @@ def make_map(gdf, color="blue"):
     return m
 
 
-# -----------------------------
 # الربط المكاني
-# -----------------------------
 def run_spatial_join(left_gdf, right_gdf, relation, how_type):
     left_gdf, right_gdf = align_crs(left_gdf, right_gdf)
 
@@ -141,9 +135,7 @@ def run_spatial_join(left_gdf, right_gdf, relation, how_type):
     return result
 
 
-# -----------------------------
 # الربط الوصفي
-# -----------------------------
 def run_attribute_join(left_gdf, right_gdf, left_field, right_field, how_type):
     left_copy = left_gdf.copy()
     right_copy = right_gdf.copy()
@@ -167,9 +159,7 @@ def run_attribute_join(left_gdf, right_gdf, left_field, right_field, how_type):
     return result
 
 
-# -----------------------------
 # تجهيز ملف GeoJSON للتنزيل
-# -----------------------------
 def result_to_geojson_bytes(result_gdf):
     temp_dir = tempfile.mkdtemp()
     out_path = os.path.join(temp_dir, "join_result.geojson")
@@ -181,9 +171,7 @@ def result_to_geojson_bytes(result_gdf):
     return data
 
 
-# -----------------------------
 # واجهة التطبيق
-# -----------------------------
 st.title("تطبيق Web GIS للربط المكاني والربط الوصفي")
 st.write("ارفع ملفين جغرافيين ثم اختر نوع الربط واعرض النتيجة ونزّلها بصيغة GeoJSON")
 
@@ -193,7 +181,7 @@ with st.sidebar:
     st.write("2. ارفع الطبقة الثانوية")
     st.write("3. اختر نوع الربط")
     st.write("4. نفذ العملية")
-    st.write("5. نزّل النتيجة")
+    st.write("5. نزل النتيجة")
 
     left_file = st.file_uploader(
         "ارفع الطبقة الأساسية Left",
