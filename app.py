@@ -8,94 +8,10 @@ import folium
 from streamlit_folium import st_folium
 
 
-st.set_page_config(
-    page_title="Web GIS Join App Ucas 2026 120237490",
-    page_icon="🌍",
-    layout="wide"
-)
+st.set_page_config(page_title="Web GIS Join App Ucas 2026 120237490", layout="wide")
 
 
-# -----------------------------
-# CSS بسيط لتحسين الشكل
-# -----------------------------
-st.markdown("""
-<style>
-    .main {
-        padding-top: 1rem;
-    }
-
-    [data-testid="stSidebar"] {
-        min-width: 360px;
-        max-width: 360px;
-    }
-
-    .main-title {
-        background: linear-gradient(90deg, #0f172a, #1e3a8a);
-        padding: 18px;
-        border-radius: 14px;
-        color: white;
-        text-align: center;
-        margin-bottom: 12px;
-        box-shadow: 0 4px 14px rgba(0,0,0,0.15);
-    }
-
-    .sub-note {
-        text-align: center;
-        color: #cbd5e1;
-        margin-bottom: 18px;
-    }
-
-    .section-card {
-        background: rgba(255,255,255,0.04);
-        border: 1px solid rgba(255,255,255,0.08);
-        border-radius: 14px;
-        padding: 14px 16px;
-        margin-bottom: 14px;
-    }
-
-    .upload-box {
-        background: linear-gradient(180deg, rgba(16,185,129,0.10), rgba(59,130,246,0.08));
-        border: 1px dashed rgba(148,163,184,0.45);
-        border-radius: 14px;
-        padding: 12px;
-        margin-bottom: 10px;
-    }
-
-    .small-title {
-        font-size: 18px;
-        font-weight: 700;
-        margin-bottom: 8px;
-    }
-
-    .soft-text {
-        color: #cbd5e1;
-        font-size: 14px;
-    }
-
-    .result-box {
-        background: linear-gradient(180deg, rgba(30,41,59,0.70), rgba(15,23,42,0.85));
-        border-radius: 14px;
-        padding: 14px;
-        border: 1px solid rgba(148,163,184,0.15);
-        margin-top: 12px;
-    }
-
-    .metric-chip {
-        display: inline-block;
-        padding: 8px 14px;
-        border-radius: 999px;
-        background: rgba(16,185,129,0.12);
-        border: 1px solid rgba(16,185,129,0.25);
-        margin-bottom: 12px;
-        font-weight: 700;
-    }
-</style>
-""", unsafe_allow_html=True)
-
-
-# -----------------------------
-# Session State
-# -----------------------------
+# تهيئة session state
 if "result_gdf" not in st.session_state:
     st.session_state.result_gdf = None
 
@@ -106,9 +22,7 @@ if "result_type" not in st.session_state:
     st.session_state.result_type = ""
 
 
-# -----------------------------
-# دالة تجهيز الجدول للعرض
-# -----------------------------
+# تجهيز الجدول للعرض حتى لا يحدث خطأ pyarrow
 def prepare_table_for_display(gdf, rows=5):
     table_df = gdf.head(rows).copy()
 
@@ -121,9 +35,7 @@ def prepare_table_for_display(gdf, rows=5):
     return table_df
 
 
-# -----------------------------
-# قراءة الطبقة
-# -----------------------------
+# قراءة الطبقة المرفوعة
 def read_layer(uploaded_file, layer_label):
     file_name = uploaded_file.name.lower()
 
@@ -187,18 +99,14 @@ def read_layer(uploaded_file, layer_label):
         raise ValueError(f"حدث خطأ أثناء قراءة الملف {layer_label}: {str(e)}")
 
 
-# -----------------------------
-# توحيد CRS
-# -----------------------------
+# توحيد نظام الإحداثيات
 def align_crs(left_gdf, right_gdf):
     if left_gdf.crs != right_gdf.crs:
         right_gdf = right_gdf.to_crs(left_gdf.crs)
     return left_gdf, right_gdf
 
 
-# -----------------------------
 # رسم الخريطة
-# -----------------------------
 def make_map(gdf, color="blue"):
     gdf_map = gdf.to_crs(epsg=4326)
 
@@ -213,16 +121,14 @@ def make_map(gdf, color="blue"):
         style_function=lambda x: {
             "color": color,
             "weight": 2,
-            "fillOpacity": 0.25
+            "fillOpacity": 0.3
         }
     ).add_to(m)
 
     return m
 
 
-# -----------------------------
 # الربط المكاني
-# -----------------------------
 def run_spatial_join(left_gdf, right_gdf, relation, how_type):
     left_gdf, right_gdf = align_crs(left_gdf, right_gdf)
 
@@ -238,9 +144,7 @@ def run_spatial_join(left_gdf, right_gdf, relation, how_type):
     return result
 
 
-# -----------------------------
 # الربط الوصفي
-# -----------------------------
 def run_attribute_join(left_gdf, right_gdf, left_field, right_field, how_type):
     left_copy = left_gdf.copy()
     right_copy = right_gdf.copy()
@@ -260,12 +164,11 @@ def run_attribute_join(left_gdf, right_gdf, left_field, right_field, how_type):
     )
 
     result = gpd.GeoDataFrame(result, geometry="geometry", crs=left_gdf.crs)
+
     return result
 
 
-# -----------------------------
-# تجهيز GeoJSON للتنزيل
-# -----------------------------
+# تجهيز ملف GeoJSON للتنزيل
 def result_to_geojson_bytes(result_gdf):
     temp_dir = tempfile.mkdtemp()
     out_path = os.path.join(temp_dir, "join_result.geojson")
@@ -277,65 +180,36 @@ def result_to_geojson_bytes(result_gdf):
     return data
 
 
-# -----------------------------
-# العنوان
-# -----------------------------
-st.markdown("""
-<div class="main-title">
-    <h1 style="margin:0;">تطبيق Web GIS للربط المكاني والربط الوصفي</h1>
-</div>
-<div class="sub-note">
-    ارفع ملفين جغرافيين ثم اختر نوع الربط واعرض النتيجة ونزّلها بصيغة GeoJSON
-</div>
-""", unsafe_allow_html=True)
+# واجهة التطبيق
+st.title("تطبيق ويب ونظم معلومات جغرافية للربط المكاني والربط الوصفي")
+st.write("ارفع ملفين جغرافيين ثم اختر نوع الربط واعرض النتيجة ونزّلها بصيغة GeoJSON")
 
-
-# -----------------------------
-# Sidebar
-# -----------------------------
 with st.sidebar:
-    st.markdown('<div class="section-card">', unsafe_allow_html=True)
-    st.subheader("لوحة التحكم")
+    st.header("التحكم")
     st.write("1. ارفع الطبقة الأساسية")
     st.write("2. ارفع الطبقة الثانوية")
     st.write("3. اختر نوع الربط")
     st.write("4. نفذ العملية")
-    st.write("5. نزّل النتيجة")
-    st.markdown("</div>", unsafe_allow_html=True)
-
-    st.markdown('<div class="upload-box">', unsafe_allow_html=True)
-    st.markdown('<div class="small-title">رفع الطبقة الأساسية</div>', unsafe_allow_html=True)
-    st.markdown('<div class="soft-text">يدعم ZIP Shapefile أو GeoJSON أو JSON</div>', unsafe_allow_html=True)
+    st.write("5. نزل النتيجة")
 
     left_file = st.file_uploader(
-        "اختر ملف الطبقة الأساسية Left",
+        "ارفع الطبقة الأساسية Left",
         type=["zip", "geojson", "json"],
-        key="left_file",
-        label_visibility="collapsed"
+        key="left_file"
     )
-    st.markdown("</div>", unsafe_allow_html=True)
-
-    st.markdown('<div class="upload-box">', unsafe_allow_html=True)
-    st.markdown('<div class="small-title">رفع الطبقة الثانوية</div>', unsafe_allow_html=True)
-    st.markdown('<div class="soft-text">يدعم ZIP Shapefile أو GeoJSON أو JSON</div>', unsafe_allow_html=True)
 
     right_file = st.file_uploader(
-        "اختر ملف الطبقة الثانوية Right",
+        "ارفع الطبقة الثانوية Right",
         type=["zip", "geojson", "json"],
-        key="right_file",
-        label_visibility="collapsed"
+        key="right_file"
     )
-    st.markdown("</div>", unsafe_allow_html=True)
-
 
 left_gdf = None
 right_gdf = None
 
 col1, col2 = st.columns(2)
 
-# -----------------------------
 # قراءة الطبقة الأولى
-# -----------------------------
 if left_file is not None:
     try:
         with st.spinner("جاري قراءة الطبقة الأساسية..."):
@@ -344,9 +218,7 @@ if left_file is not None:
     except Exception as e:
         st.error(str(e))
 
-# -----------------------------
 # قراءة الطبقة الثانية
-# -----------------------------
 if right_file is not None:
     try:
         with st.spinner("جاري قراءة الطبقة الثانوية..."):
@@ -355,13 +227,9 @@ if right_file is not None:
     except Exception as e:
         st.error(str(e))
 
-
-# -----------------------------
 # عرض الطبقة الأولى
-# -----------------------------
 if left_gdf is not None:
     with col1:
-        st.markdown('<div class="section-card">', unsafe_allow_html=True)
         st.subheader("الطبقة الأساسية Left")
         st.write("أول 5 صفوف")
         st.dataframe(prepare_table_for_display(left_gdf, 5), use_container_width=True)
@@ -370,15 +238,11 @@ if left_gdf is not None:
         st.write("CRS:", left_gdf.crs)
 
         left_map = make_map(left_gdf, color="blue")
-        st_folium(left_map, width=650, height=380)
-        st.markdown("</div>", unsafe_allow_html=True)
+        st_folium(left_map, width=500, height=350)
 
-# -----------------------------
 # عرض الطبقة الثانية
-# -----------------------------
 if right_gdf is not None:
     with col2:
-        st.markdown('<div class="section-card">', unsafe_allow_html=True)
         st.subheader("الطبقة الثانوية Right")
         st.write("أول 5 صفوف")
         st.dataframe(prepare_table_for_display(right_gdf, 5), use_container_width=True)
@@ -387,22 +251,16 @@ if right_gdf is not None:
         st.write("CRS:", right_gdf.crs)
 
         right_map = make_map(right_gdf, color="green")
-        st_folium(right_map, width=650, height=380)
-        st.markdown("</div>", unsafe_allow_html=True)
+        st_folium(right_map, width=500, height=350)
 
-
-# -----------------------------
 # خيارات الربط
-# -----------------------------
 if left_gdf is not None and right_gdf is not None:
     st.markdown("---")
-    st.markdown('<div class="section-card">', unsafe_allow_html=True)
     st.subheader("اختيار نوع الربط")
 
     join_mode = st.radio(
         "اختر نوع العملية",
-        ["Spatial Join", "Attribute Join"],
-        horizontal=True
+        ["Spatial Join", "Attribute Join"]
     )
 
     if join_mode == "Spatial Join":
@@ -416,7 +274,7 @@ if left_gdf is not None and right_gdf is not None:
             ["left", "right", "inner"]
         )
 
-        if st.button("تنفيذ الربط المكاني", use_container_width=True):
+        if st.button("تنفيذ الربط المكاني"):
             try:
                 with st.spinner("جاري تنفيذ الربط المكاني..."):
                     result_gdf = run_spatial_join(left_gdf, right_gdf, relation, how_type)
@@ -445,7 +303,7 @@ if left_gdf is not None and right_gdf is not None:
             ["left", "right", "inner", "outer"]
         )
 
-        if st.button("تنفيذ الربط الوصفي", use_container_width=True):
+        if st.button("تنفيذ الربط الوصفي"):
             try:
                 with st.spinner("جاري تنفيذ الربط الوصفي..."):
                     result_gdf = run_attribute_join(
@@ -468,12 +326,7 @@ if left_gdf is not None and right_gdf is not None:
                 st.session_state.result_gdf = None
                 st.session_state.result_message = f"خطأ في الربط الوصفي: {str(e)}"
 
-    st.markdown("</div>", unsafe_allow_html=True)
-
-
-# -----------------------------
-# عرض الرسائل
-# -----------------------------
+# عرض الرسالة
 if st.session_state.result_message:
     if "خطأ" in st.session_state.result_message:
         st.error(st.session_state.result_message)
@@ -482,51 +335,35 @@ if st.session_state.result_message:
     else:
         st.success(st.session_state.result_message)
 
-
-# -----------------------------
-# عرض النتيجة
-# -----------------------------
+# عرض النتيجة بشكل ثابت
 if st.session_state.result_gdf is not None:
     result_gdf = st.session_state.result_gdf
 
     st.markdown("---")
-    st.markdown('<div class="result-box">', unsafe_allow_html=True)
     st.subheader("النتيجة النهائية")
-    st.markdown(
-        f'<div class="metric-chip">عدد السجلات الناتجة: {len(result_gdf)}</div>',
-        unsafe_allow_html=True
-    )
-
+    st.write("عدد السجلات الناتجة:", len(result_gdf))
     st.dataframe(prepare_table_for_display(result_gdf, 20), use_container_width=True)
 
     try:
         result_map = make_map(result_gdf, color="red")
-        st_folium(result_map, width=1100, height=480)
+        st_folium(result_map, width=900, height=450)
     except Exception:
         st.info("تعذر عرض خريطة النتيجة لكن البيانات موجودة")
 
     try:
         geojson_data = result_to_geojson_bytes(result_gdf)
 
-        c1, c2 = st.columns([3, 1])
-
-        with c1:
-            st.download_button(
-                label="تنزيل النتيجة بصيغة GeoJSON",
-                data=geojson_data,
-                file_name="join_result.geojson",
-                mime="application/geo+json",
-                use_container_width=True
-            )
-
-        with c2:
-            if st.button("مسح النتيجة", use_container_width=True):
-                st.session_state.result_gdf = None
-                st.session_state.result_message = ""
-                st.session_state.result_type = ""
-                st.rerun()
-
+        st.download_button(
+            label="تنزيل النتيجة بصيغة GeoJSON",
+            data=geojson_data,
+            file_name="join_result.geojson",
+            mime="application/geo+json"
+        )
     except Exception as e:
         st.error(f"تعذر تجهيز ملف التنزيل: {str(e)}")
 
-    st.markdown("</div>", unsafe_allow_html=True)
+    if st.button("مسح النتيجة"):
+        st.session_state.result_gdf = None
+        st.session_state.result_message = ""
+        st.session_state.result_type = ""
+        st.rerun()
