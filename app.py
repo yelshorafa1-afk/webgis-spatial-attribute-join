@@ -181,7 +181,10 @@ def result_to_geojson_bytes(result_gdf):
 
 
 # واجهة التطبيق
-st.title("تطبيق ويب ونظم معلومات جغرافية للربط المكاني والربط الوصفي")
+st.title("تطبيق ويب  ونظم معلومات جغرافية للربط المكاني والربط الوصفي")
+# st.title("اعداد الطالب :يوسف محمد محمد الشرفا")
+# st.title("مشروع مساق تقنين وبرمجيات نظم المعلومات الجغرافية (2) ")
+
 st.write("ارفع ملفين جغرافيين ثم اختر نوع الربط واعرض النتيجة ونزّلها بصيغة GeoJSON")
 
 with st.sidebar:
@@ -212,7 +215,7 @@ col1, col2 = st.columns(2)
 # قراءة الطبقة الأولى
 if left_file is not None:
     try:
-        with st.spinner("جاري قراءة الطبقة الأساسية..."):
+        with st.spinner("جاري قراءة الطبقة الأساسية--------"):
             left_gdf = read_layer(left_file, "Left")
         st.success("تم رفع الطبقة الأساسية بنجاح")
     except Exception as e:
@@ -221,7 +224,7 @@ if left_file is not None:
 # قراءة الطبقة الثانية
 if right_file is not None:
     try:
-        with st.spinner("جاري قراءة الطبقة الثانوية..."):
+        with st.spinner("جاري قراءة الطبقة الثانوية----------"):
             right_gdf = read_layer(right_file, "Right")
         st.success("تم رفع الطبقة الثانوية بنجاح")
     except Exception as e:
@@ -276,7 +279,7 @@ if left_gdf is not None and right_gdf is not None:
 
         if st.button("تنفيذ الربط المكاني"):
             try:
-                with st.spinner("جاري تنفيذ الربط المكاني..."):
+                with st.spinner("جاري تنفيذ الربط المكاني-------"):
                     result_gdf = run_spatial_join(left_gdf, right_gdf, relation, how_type)
 
                 st.session_state.result_gdf = result_gdf
@@ -305,7 +308,7 @@ if left_gdf is not None and right_gdf is not None:
 
         if st.button("تنفيذ الربط الوصفي"):
             try:
-                with st.spinner("جاري تنفيذ الربط الوصفي..."):
+                with st.spinner("جاري تنفيذ الربط الوصفي**------"):
                     result_gdf = run_attribute_join(
                         left_gdf,
                         right_gdf,
