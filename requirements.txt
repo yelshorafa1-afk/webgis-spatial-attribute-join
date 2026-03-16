@@ -1,0 +1,8 @@
+streamlit==1.52.2
+geopandas==1.1.1
+folium==0.20.0
+streamlit-folium==0.25.3
+pandas
+fiona
+pyproj
+shapely
